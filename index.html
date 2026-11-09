@@ -143,7 +143,16 @@ button { background:#557fbd; color:white; border:0; border-radius:9px; padding:1
   function request(url, callback) {
     var xhr = new XMLHttpRequest();
     var done = false;
-    function finish(err, data) { if (!done) { done = true; callback(err, data); } }
+    // Watchdog: on very old Safari a failed HTTPS handshake can leave the
+    // request hanging without firing any event, so force a failure after
+    // 20s to let the next fallback run.
+    var watchdog = window.setTimeout(function () {
+      try { xhr.abort(); } catch (e) {}
+      finish(new Error("Tempo esgotado"), null);
+    }, 20000);
+    function finish(err, data) {
+      if (!done) { done = true; window.clearTimeout(watchdog); callback(err, data); }
+    }
     xhr.open("GET", url, true);
     try { xhr.timeout = 15000; } catch (e) {}
     xhr.onreadystatechange = function () {
@@ -171,18 +180,27 @@ button { background:#557fbd; color:white; border:0; border-radius:9px; padding:1
   // >>> (passo a passo no arquivo cloudflare-worker.js deste repositorio)
   var WEATHER_PROXY = "https://painel-clima.fornetti-greg.workers.dev/?url=";
 
+  // Old iOS (before 10) can never validate Open-Meteo HTTPS, so do not
+  // waste time on a direct attempt there: go straight to the proxy.
+  var uaMatch = /OS ([0-9]+)_/.exec(navigator.userAgent || "");
+  var oldIOS = uaMatch && parseInt(uaMatch[1], 10) < 10;
+
   function requestApi(hostAndPath, callback) {
-    request("https://" + hostAndPath, function (err, data) {
-      if (!err) { callback(null, data); return; }
-      if (WEATHER_PROXY) {
-        request(WEATHER_PROXY + encodeURIComponent("https://" + hostAndPath), function (proxyErr, proxyData) {
-          if (!proxyErr) { callback(null, proxyData); return; }
-          request("http://" + hostAndPath, callback);
-        });
-      } else {
-        request("http://" + hostAndPath, callback);
-      }
-    });
+    function viaProxy(next) {
+      request(WEATHER_PROXY + encodeURIComponent("https://" + hostAndPath), function (err, data) {
+        if (!err) { callback(null, data); return; }
+        next();
+      });
+    }
+    function viaHttp() { request("http://" + hostAndPath, callback); }
+    if (WEATHER_PROXY && oldIOS) {
+      viaProxy(viaHttp);
+    } else {
+      request("https://" + hostAndPath, function (err, data) {
+        if (!err) { callback(null, data); return; }
+        if (WEATHER_PROXY) viaProxy(viaHttp); else viaHttp();
+      });
+    }
   }
 
   function loadWeather() {
