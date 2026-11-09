@@ -1,11 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Painel pessoal</title>
+<style>
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; width:100%; min-height:100%; background:#101827; color:#f4f7fb; font-family:Arial, Helvetica, sans-serif; }
+body { padding:18px; }
+.wrap { max-width:1000px; margin:0 auto; }
+.top { text-align:center; padding:12px 0 22px; }
+.eyebrow { color:#a8b6ca; font-size:14px; letter-spacing:2px; text-transform:uppercase; }
+.time { font-size:clamp(54px, 12vw, 100px); font-weight:300; letter-spacing:-3px; line-height:1.05; margin:8px 0; }
+.today { color:#c6d2e2; font-size:clamp(18px, 3vw, 25px); }
+.grid { display:flex; flex-wrap:wrap; gap:16px; }
+.panel { background:#1b293d; border:1px solid #30425c; border-radius:18px; padding:20px; flex:1 1 300px; min-width:0; }
+.panel h2 { margin:0 0 16px; color:#b9c9dd; font-size:15px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; }
+.weather-main { display:flex; align-items:center; gap:18px; }
+.weather-icon { font-size:58px; line-height:1; }
+.temp { font-size:54px; font-weight:300; }
+.weather-desc { color:#c6d2e2; font-size:18px; margin-top:3px; }
+.details { color:#a8b6ca; font-size:15px; margin-top:18px; line-height:1.7; }
+.cityrow { display:flex; gap:8px; margin-top:16px; }
+input { min-width:0; flex:1; background:#101827; color:#fff; border:1px solid #435773; border-radius:9px; padding:11px 12px; font-size:16px; }
+button { background:#557fbd; color:white; border:0; border-radius:9px; padding:11px 15px; font-size:15px; }
+.status { color:#9eafc5; font-size:13px; margin-top:10px; min-height:18px; }
+.cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.month { font-size:23px; font-weight:600; text-transform:capitalize; }
+.nav { display:flex; gap:8px; }
+.nav button { padding:7px 12px; font-size:20px; line-height:1; }
+.calendar { display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
+.dayname, .day { text-align:center; padding:10px 0; }
+.dayname { color:#8fa3bd; font-size:12px; text-transform:uppercase; }
+.day { border-radius:9px; color:#e2eaf4; font-size:15px; }
+.day.muted { color:#61738b; }
+.day.today { background:#557fbd; color:white; font-weight:bold; }
+.footer { text-align:center; color:#71839b; font-size:12px; padding:18px 0 4px; }
+@media (max-width:600px) {
+ body { padding:12px; }
+ .panel { padding:16px; }
+ .time { letter-spacing:-2px; }
+}
+</style>
 </head>
 <body>
-    <h1>Hello, world!</h1>
+<div class="wrap">
+  <div class="top">
+    <div class="eyebrow">Painel pessoal</div>
+    <div class="time" id="clock">--:--</div>
+    <div class="today" id="dateLine">Carregando data…</div>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Tempo agora</h2>
+      <div class="weather-main">
+        <div class="weather-icon" id="weatherIcon">☀️</div>
+        <div>
+          <div class="temp" id="temperature">--°</div>
+          <div class="weather-desc" id="description">Consultando previsão…</div>
+        </div>
+      </div>
+      <div class="details" id="weatherDetails">A temperatura e as condições atuais serão atualizadas pela internet.</div>
+      <div class="cityrow">
+        <input id="city" type="text" value="São Paulo" aria-label="Cidade">
+        <button id="updateWeather">Atualizar</button>
+      </div>
+      <div class="status" id="weatherStatus">Clima fornecido pelo Open-Meteo. Requer conexão com a internet.</div>
+    </section>
+
+    <section class="panel">
+      <h2>Calendário</h2>
+      <div class="cal-head">
+        <div class="month" id="monthLabel"></div>
+        <div class="nav">
+          <button id="prev" aria-label="Mês anterior">‹</button>
+          <button id="next" aria-label="Próximo mês">›</button>
+        </div>
+      </div>
+      <div class="calendar" id="calendar"></div>
+    </section>
+  </div>
+  <div class="footer">Relógio e calendário funcionam offline · Clima precisa de internet</div>
+</div>
+
+<script type="text/javascript">
+(function () {
+  var monthNames = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  var dayNames = ["dom","seg","ter","qua","qui","sex","sáb"];
+  var viewDate = new Date();
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function updateClock() {
+    var now = new Date();
+    document.getElementById("clock").innerHTML = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+    var days = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+    document.getElementById("dateLine").innerHTML = days[now.getDay()] + ", " + now.getDate() + " de " + monthNames[now.getMonth()] + " de " + now.getFullYear();
+  }
+
+  function renderCalendar() {
+    var year = viewDate.getFullYear(), month = viewDate.getMonth();
+    document.getElementById("monthLabel").innerHTML = monthNames[month] + " " + year;
+    var html = "", i;
+    for (i = 0; i < 7; i++) html += '<div class="dayname">' + dayNames[i] + '</div>';
+    var first = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var prevDays = new Date(year, month, 0).getDate();
+    var today = new Date();
+    for (i = 0; i < 42; i++) {
+      var day, cls = "day";
+      if (i < first) { day = prevDays - first + i + 1; cls += " muted"; }
+      else if (i >= first + daysInMonth) { day = i - first - daysInMonth + 1; cls += " muted"; }
+      else {
+        day = i - first + 1;
+        if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) cls += " today";
+      }
+      html += '<div class="' + cls + '">' + day + '</div>';
+    }
+    document.getElementById("calendar").innerHTML = html;
+  }
+
+  document.getElementById("prev").onclick = function () { viewDate.setMonth(viewDate.getMonth() - 1); renderCalendar(); };
+  document.getElementById("next").onclick = function () { viewDate.setMonth(viewDate.getMonth() + 1); renderCalendar(); };
+
+  function weatherText(code) {
+    if (code === 0) return ["Ensolarado", "☀️"];
+    if (code === 1 || code === 2) return ["Poucas nuvens", "🌤️"];
+    if (code === 3) return ["Nublado", "☁️"];
+    if (code === 45 || code === 48) return ["Neblina", "🌫️"];
+    if (code >= 51 && code <= 57) return ["Garoa", "🌦️"];
+    if (code >= 61 && code <= 67) return ["Chuva", "🌧️"];
+    if (code >= 71 && code <= 77) return ["Neve", "❄️"];
+    if (code >= 80 && code <= 82) return ["Pancadas de chuva", "🌧️"];
+    if (code >= 95) return ["Trovoadas", "⛈️"];
+    return ["Condição variável", "🌡️"];
+  }
+
+  function request(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { callback(null, JSON.parse(xhr.responseText)); }
+          catch (e) { callback(e, null); }
+        } else callback(new Error("Falha na consulta"), null);
+      }
+    };
+    xhr.onerror = function () { callback(new Error("Sem conexão"), null); };
+    xhr.send(null);
+  }
+
+  function loadWeather() {
+    var city = document.getElementById("city").value.replace(/^\s+|\s+$/g, "");
+    var status = document.getElementById("weatherStatus");
+    if (!city) { status.innerHTML = "Digite o nome de uma cidade."; return; }
+    status.innerHTML = "Buscando " + city + "…";
+    var geoUrl = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=pt&format=json";
+    request(geoUrl, function (err, geo) {
+      if (err || !geo || !geo.results || !geo.results.length) {
+        status.innerHTML = "Não foi possível localizar a cidade. Verifique a conexão ou tente outro nome.";
+        return;
+      }
+      var place = geo.results[0];
+      var weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + place.latitude + "&longitude=" + place.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=auto";
+      request(weatherUrl, function (weatherErr, data) {
+        if (weatherErr || !data || !data.current) {
+          status.innerHTML = "Não foi possível obter a temperatura agora.";
+          return;
+        }
+        var c = data.current, desc = weatherText(c.weather_code);
+        document.getElementById("temperature").innerHTML = Math.round(c.temperature_2m) + "°C";
+        document.getElementById("weatherIcon").innerHTML = desc[1];
+        document.getElementById("description").innerHTML = desc[0];
+        document.getElementById("weatherDetails").innerHTML =
+          "Sensação térmica: " + Math.round(c.apparent_temperature) + "°C<br>" +
+          "Umidade: " + c.relative_humidity_2m + "%<br>" +
+          "Vento: " + Math.round(c.wind_speed_10m) + " km/h<br>" +
+          "Local: " + place.name + (place.admin1 ? ", " + place.admin1 : "");
+        status.innerHTML = "Atualizado às " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes()) + " · Dados Open-Meteo";
+      });
+    });
+  }
+
+  document.getElementById("updateWeather").onclick = loadWeather;
+  document.getElementById("city").onkeydown = function (e) { if (e.keyCode === 13) loadWeather(); };
+  updateClock();
+  window.setInterval(updateClock, 1000);
+  renderCalendar();
+  loadWeather();
+}());
+</script>
 </body>
 </html>
