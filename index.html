@@ -142,47 +142,62 @@ button { background:#557fbd; color:white; border:0; border-radius:9px; padding:1
 
   function request(url, callback) {
     var xhr = new XMLHttpRequest();
+    var done = false;
+    function finish(err, data) { if (!done) { done = true; callback(err, data); } }
     xhr.open("GET", url, true);
+    try { xhr.timeout = 15000; } catch (e) {}
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
-          try { callback(null, JSON.parse(xhr.responseText)); }
-          catch (e) { callback(e, null); }
-        } else callback(new Error("Falha na consulta"), null);
+          try { finish(null, JSON.parse(xhr.responseText)); }
+          catch (e) { finish(e, null); }
+        } else finish(new Error("Falha na consulta"), null);
       }
     };
-    xhr.onerror = function () { callback(new Error("Sem conexão"), null); };
+    xhr.onerror = function () { finish(new Error("Sem conexao"), null); };
+    xhr.ontimeout = function () { finish(new Error("Tempo esgotado"), null); };
     xhr.send(null);
+  }
+
+  // iOS 9.3.5 does not trust the HTTPS certificate chain used by Open-Meteo
+  // (ISRG Root X1/X2 are not in its certificate store), so HTTPS requests
+  // always fail there. The same API also answers over plain HTTP, so when
+  // HTTPS fails the request is retried without TLS.
+  function requestApi(hostAndPath, callback) {
+    request("https://" + hostAndPath, function (err, data) {
+      if (!err) { callback(null, data); return; }
+      request("http://" + hostAndPath, callback);
+    });
   }
 
   function loadWeather() {
     var city = document.getElementById("city").value.replace(/^\s+|\s+$/g, "");
     var status = document.getElementById("weatherStatus");
     if (!city) { status.innerHTML = "Digite o nome de uma cidade."; return; }
-    status.innerHTML = "Buscando " + city + "…";
-    var geoUrl = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=pt&format=json";
-    request(geoUrl, function (err, geo) {
+    status.innerHTML = "Buscando " + city + "\u2026";
+    var geoPath = "geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=pt&format=json";
+    requestApi(geoPath, function (err, geo) {
       if (err || !geo || !geo.results || !geo.results.length) {
-        status.innerHTML = "Não foi possível localizar a cidade. Verifique a conexão ou tente outro nome.";
+        status.innerHTML = "N\u00e3o foi poss\u00edvel localizar a cidade. Verifique a conex\u00e3o ou tente outro nome.";
         return;
       }
       var place = geo.results[0];
-      var weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + place.latitude + "&longitude=" + place.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=auto";
-      request(weatherUrl, function (weatherErr, data) {
+      var weatherPath = "api.open-meteo.com/v1/forecast?latitude=" + place.latitude + "&longitude=" + place.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=auto";
+      requestApi(weatherPath, function (weatherErr, data) {
         if (weatherErr || !data || !data.current) {
-          status.innerHTML = "Não foi possível obter a temperatura agora.";
+          status.innerHTML = "N\u00e3o foi poss\u00edvel obter a temperatura agora.";
           return;
         }
         var c = data.current, desc = weatherText(c.weather_code);
-        document.getElementById("temperature").innerHTML = Math.round(c.temperature_2m) + "°C";
+        document.getElementById("temperature").innerHTML = Math.round(c.temperature_2m) + "\u00b0C";
         document.getElementById("weatherIcon").innerHTML = desc[1];
         document.getElementById("description").innerHTML = desc[0];
         document.getElementById("weatherDetails").innerHTML =
-          "Sensação térmica: " + Math.round(c.apparent_temperature) + "°C<br>" +
+          "Sensa\u00e7\u00e3o t\u00e9rmica: " + Math.round(c.apparent_temperature) + "\u00b0C<br>" +
           "Umidade: " + c.relative_humidity_2m + "%<br>" +
           "Vento: " + Math.round(c.wind_speed_10m) + " km/h<br>" +
           "Local: " + place.name + (place.admin1 ? ", " + place.admin1 : "");
-        status.innerHTML = "Atualizado às " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes()) + " · Dados Open-Meteo";
+        status.innerHTML = "Atualizado \u00e0s " + pad(new Date().getHours()) + ":" + pad(new Date().getMinutes()) + " \u00b7 Dados Open-Meteo";
       });
     });
   }
