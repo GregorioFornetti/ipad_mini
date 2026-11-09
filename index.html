@@ -7,40 +7,42 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Painel pessoal</title>
 <style>
-* { box-sizing: border-box; }
-html, body { margin:0; padding:0; width:100%; min-height:100%; background:#101827; color:#f4f7fb; font-family:Arial, Helvetica, sans-serif; }
+/* iOS 9.3.5 (Safari 9): no CSS Grid, no clamp(), no flex gap. Fallback first, modern override after; old Safari drops what it cannot parse. */
+* { -webkit-box-sizing:border-box; box-sizing:border-box; }
+html, body { margin:0; padding:0; width:100%; min-height:100%; background:#101827; color:#f4f7fb; font-family:Arial, Helvetica, sans-serif; -webkit-text-size-adjust:100%; }
 body { padding:18px; }
 .wrap { max-width:1000px; margin:0 auto; }
 .top { text-align:center; padding:12px 0 22px; }
 .eyebrow { color:#a8b6ca; font-size:14px; letter-spacing:2px; text-transform:uppercase; }
-.time { font-size:clamp(54px, 12vw, 100px); font-weight:300; letter-spacing:-3px; line-height:1.05; margin:8px 0; }
-.today { color:#c6d2e2; font-size:clamp(18px, 3vw, 25px); }
-.grid { display:flex; flex-wrap:wrap; gap:16px; }
-.panel { background:#1b293d; border:1px solid #30425c; border-radius:18px; padding:20px; flex:1 1 300px; min-width:0; }
+.time { font-size:54px; font-size:12vw; font-size:clamp(54px, 12vw, 100px); font-weight:300; letter-spacing:-3px; line-height:1.05; margin:8px 0; }
+.today { color:#c6d2e2; font-size:18px; font-size:3vw; font-size:clamp(18px, 3vw, 25px); }
+.grid { display:-webkit-box; display:-webkit-flex; display:-ms-flexbox; display:flex; -webkit-flex-wrap:wrap; -ms-flex-wrap:wrap; flex-wrap:wrap; margin:0 -8px; }
+.panel { background:#1b293d; border:1px solid #30425c; border-radius:18px; padding:20px; margin:0 8px 16px; -webkit-box-flex:1; -webkit-flex:1 1 300px; -ms-flex:1 1 300px; flex:1 1 300px; min-width:0; }
 .panel h2 { margin:0 0 16px; color:#b9c9dd; font-size:15px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; }
-.weather-main { display:flex; align-items:center; gap:18px; }
-.weather-icon { font-size:58px; line-height:1; }
+.weather-main { display:-webkit-box; display:-webkit-flex; display:-ms-flexbox; display:flex; -webkit-box-align:center; -webkit-align-items:center; -ms-flex-align:center; align-items:center; }
+.weather-icon { font-size:58px; line-height:1; margin-right:18px; }
 .temp { font-size:54px; font-weight:300; }
 .weather-desc { color:#c6d2e2; font-size:18px; margin-top:3px; }
 .details { color:#a8b6ca; font-size:15px; margin-top:18px; line-height:1.7; }
-.cityrow { display:flex; gap:8px; margin-top:16px; }
-input { min-width:0; flex:1; background:#101827; color:#fff; border:1px solid #435773; border-radius:9px; padding:11px 12px; font-size:16px; }
-button { background:#557fbd; color:white; border:0; border-radius:9px; padding:11px 15px; font-size:15px; }
+.cityrow { display:-webkit-box; display:-webkit-flex; display:-ms-flexbox; display:flex; margin-top:16px; }
+input { min-width:0; -webkit-box-flex:1; -webkit-flex:1; -ms-flex:1; flex:1; background:#101827; color:#fff; border:1px solid #435773; border-radius:9px; padding:11px 12px; font-size:16px; margin-right:8px; -webkit-appearance:none; appearance:none; }
+button { background:#557fbd; color:white; border:0; border-radius:9px; padding:11px 15px; font-size:15px; -webkit-appearance:none; appearance:none; }
 .status { color:#9eafc5; font-size:13px; margin-top:10px; min-height:18px; }
-.cal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-head { display:-webkit-box; display:-webkit-flex; display:-ms-flexbox; display:flex; -webkit-box-align:center; -webkit-align-items:center; -ms-flex-align:center; align-items:center; -webkit-box-pack:justify; -webkit-justify-content:space-between; -ms-flex-pack:justify; justify-content:space-between; margin-bottom:14px; }
 .month { font-size:23px; font-weight:600; text-transform:capitalize; }
-.nav { display:flex; gap:8px; }
-.nav button { padding:7px 12px; font-size:20px; line-height:1; }
-.calendar { display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; }
-.dayname, .day { text-align:center; padding:10px 0; }
+.nav { display:-webkit-box; display:-webkit-flex; display:-ms-flexbox; display:flex; }
+.nav button { padding:7px 12px; font-size:20px; line-height:1; margin-left:8px; }
+.nav button:first-child { margin-left:0; }
+.calendar { overflow:hidden; }
+.dayname, .day { float:left; width:14.2857%; text-align:center; padding:10px 0; }
 .dayname { color:#8fa3bd; font-size:12px; text-transform:uppercase; }
 .day { border-radius:9px; color:#e2eaf4; font-size:15px; }
 .day.muted { color:#61738b; }
 .day.today { background:#557fbd; color:white; font-weight:bold; }
-.footer { text-align:center; color:#71839b; font-size:12px; padding:18px 0 4px; }
+.footer { text-align:center; color:#71839b; font-size:12px; padding:18px 0 4px; clear:both; }
 @media (max-width:600px) {
  body { padding:12px; }
- .panel { padding:16px; }
+ .panel { padding:16px; -webkit-flex-basis:100%; -ms-flex-preferred-size:100%; flex-basis:100%; }
  .time { letter-spacing:-2px; }
 }
 </style>
