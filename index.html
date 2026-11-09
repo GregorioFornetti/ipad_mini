@@ -161,12 +161,27 @@ button { background:#557fbd; color:white; border:0; border-radius:9px; padding:1
 
   // iOS 9.3.5 does not trust the HTTPS certificate chain used by Open-Meteo
   // (ISRG Root X1/X2 are not in its certificate store), so HTTPS requests
-  // always fail there. The same API also answers over plain HTTP, so when
-  // HTTPS fails the request is retried without TLS.
+  // always fail there. Retries, in order: 1) the Cloudflare proxy below
+  // (its certificate chains to GlobalSign Root CA, which iOS 9 trusts, and
+  // it also works from this HTTPS page), 2) plain HTTP.
+  //
+  // >>> CONFIGURE AQUI: cole o endereco do seu Cloudflare Worker entre
+  // >>> as aspas, terminando com "?url=" - por exemplo:
+  // >>> "https://painel-clima.seu-nome.workers.dev/?url="
+  // >>> (passo a passo no arquivo cloudflare-worker.js deste repositorio)
+  var WEATHER_PROXY = "https://painel-clima.fornetti-greg.workers.dev/?url=";
+
   function requestApi(hostAndPath, callback) {
     request("https://" + hostAndPath, function (err, data) {
       if (!err) { callback(null, data); return; }
-      request("http://" + hostAndPath, callback);
+      if (WEATHER_PROXY) {
+        request(WEATHER_PROXY + encodeURIComponent("https://" + hostAndPath), function (proxyErr, proxyData) {
+          if (!proxyErr) { callback(null, proxyData); return; }
+          request("http://" + hostAndPath, callback);
+        });
+      } else {
+        request("http://" + hostAndPath, callback);
+      }
     });
   }
 

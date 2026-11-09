@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+<rect width="800" height="450" fill="#f5f6f8"/>
+<rect x="30" y="25" width="740" height="400" rx="10" fill="#1e2430"/>
+<rect x="30" y="25" width="740" height="38" rx="10" fill="#2a3140"/>
+<circle cx="52" cy="44" r="6" fill="#e5484d"/><circle cx="74" cy="44" r="6" fill="#f5a524"/><circle cx="96" cy="44" r="6" fill="#30a46c"/>
+<text x="130" y="48" font-family="Arial" font-size="11" fill="#a8b6ca">index.html</text>
+<text x="52" y="96" font-family="Courier New" font-size="12" fill="#8fa3bd">// &gt;&gt;&gt; CONFIGURE AQUI: cole o endereco do seu</text>
+<text x="52" y="116" font-family="Courier New" font-size="12" fill="#8fa3bd">// &gt;&gt;&gt; Cloudflare Worker entre as aspas...</text>
+<!-- highlighted line -->
+<rect x="44" y="132" width="712" height="34" rx="5" fill="#3a2b12" stroke="#f5a524" stroke-width="2"/>
+<text x="52" y="154" font-family="Courier New" font-size="13" fill="#ffd479">var WEATHER_PROXY = "https://painel-clima.SEUNOME.workers.dev/?url=";</text>
+<circle cx="742" cy="149" r="14" fill="none" stroke="#e5484d" stroke-width="3"/>
+<text x="742" y="154" font-family="Arial" font-size="14" font-weight="bold" fill="#e5484d" text-anchor="middle">5</text>
+<rect x="52" y="196" width="600" height="110" rx="6" fill="#fff5f5"/>
+<text x="66" y="220" font-family="Arial" font-size="12" font-weight="bold" fill="#e5484d">Step 4: in index.html, replace SEUNOME with the</text>
+<text x="66" y="238" font-family="Arial" font-size="12" fill="#1c1e21">address Cloudflare gave you (keep "?url=" at the end!).</text>
+<text x="66" y="262" font-family="Arial" font-size="12" font-weight="bold" fill="#1c1e21">Step 5: commit + push, then reload the page on the iPad.</text>
+<text x="66" y="286" font-family="Arial" font-size="12" fill="#68707c">Nothing else in the file needs to change.</text>
+<text x="30" y="443" font-family="Arial" font-size="10" fill="#9aa1ab">Illustration — the real editor may look slightly different.</text>
+</svg>
