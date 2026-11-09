@@ -45,6 +45,17 @@ npx wrangler deploy
 
 O arquivo `wrangler.toml` já aponta para o Worker certo. Depois faça o passo 4.
 
+## Se o app da tela inicial mostrar uma versão antiga
+
+O app da tela inicial guarda um cache separado do Safari e pode ficar preso numa versão velha. Para forçar a atualização:
+
+1. Faça commit e push da versão nova.
+2. No iPad, apague o ícone do painel da tela inicial (toque e segure → apagar).
+3. Ajustes → Safari → "Limpar Histórico e Dados dos Sites".
+4. Abra a página no Safari, confirme que o clima funciona, e adicione à tela inicial de novo.
+
+A partir daí, a página se atualiza sozinha: ao mudar o número `PAGE_VERSION` no `index.html` e publicar, o app recarrega uma vez com a versão nova.
+
 ## Segurança do link público
 
 O endereço do Worker fica visível no código, mas o Worker só aceita buscar dados do Open-Meteo (lista de hosts permitidos no código; qualquer outro host recebe `403`). O pior abuso possível é gastar a cota gratuita diária (100 mil requisições) — sem custo, apenas o clima para até o dia seguinte. Mantenha o Worker no plano gratuito.

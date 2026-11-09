@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Painel pessoal</title>
 <style>
 /* iOS 9.3.5 (Safari 9): no CSS Grid, no clamp(), no flex gap. Fallback first, modern override after; old Safari drops what it cannot parse. */
@@ -90,6 +93,20 @@ button { background:#557fbd; color:white; border:0; border-radius:9px; padding:1
 
 <script type="text/javascript">
 (function () {
+  // Home Screen apps on old iOS cache the page separately and can stay
+  // stuck on an old version forever. When PAGE_VERSION changes, reload
+  // once with a unique URL so the app fetches the fresh page. Bump
+  // PAGE_VERSION whenever the page is published with important changes.
+  var PAGE_VERSION = "4";
+  try {
+    if (window.localStorage.getItem("painelVersion") !== PAGE_VERSION) {
+      window.localStorage.setItem("painelVersion", PAGE_VERSION);
+      if (window.location.search.indexOf("v=") === -1) {
+        window.location.replace(window.location.pathname + "?v=" + PAGE_VERSION);
+        return;
+      }
+    }
+  } catch (e) {}
   var monthNames = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   var dayNames = ["dom","seg","ter","qua","qui","sex","sáb"];
   var viewDate = new Date();
